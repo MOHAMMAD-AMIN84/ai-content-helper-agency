@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فرم مرحله به مرحله</title>
+    <!-- Vazirmatn font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a2342;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        .form-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            margin-left: 10%;
+            margin-right: 10%;
+            padding: 32px 28px 24px 28px;
+            min-width: 340px;
+            max-width: 90vw;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        .steps-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
+            gap: 12px;
+        }
+        .step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e0e7ef;
+            color: #0a2342;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .step-circle.active {
+            background: #0a2342;
+            color: #fff;
+        }
+        .form-step {
+            display: none;
+            width: 100%;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .step-buttons {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: row-reverse;
+        }
+        input[type="text"], input[type="email"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #bfc9d9;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        button {
+            background: #0a2342;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 22px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        button:hover {
+            background: #163d6b;
+        }
+        h2 {
+            color: #0a2342;
+            margin-bottom: 18px;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+    </style>
+    <style>
+        .type-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(30, 41, 59, 0.35);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            direction: rtl;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        .type-modal.active {
+            display: flex;
+        }
+        .type-modal-content {
+            background: #fff;
+            border-radius: 18px;
+            padding: 40px 32px 28px 32px;
+            box-shadow: 0 8px 32px rgba(10,35,66,0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 320px;
+            max-width: 90vw;
+            animation: popIn 0.22s cubic-bezier(.4,1.4,.6,1) both;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .type-modal-content h3 {
+            margin-bottom: 28px;
+            color: #0a2342;
+            font-size: 1.35rem;
+            font-weight: 600;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        .type-option {
+            width: 220px;
+            margin: 0 0 18px 0;
+            padding: 18px 0;
+            font-size: 1.15rem;
+            border: none;
+            border-radius: 10px;
+            background: #e6ecfa;
+            color: #0a2342;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        .type-option:hover {
+            background: #0a2342;
+            color: #fff;
+        }
+        .type-cancel {
+            margin-top: 8px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="steps-indicator" id="stepsIndicator">
+            <!-- Steps will be rendered here -->
+        </div>
+        <h2>فرم مرحله به مرحله</h2>
+        <form id="multiStepForm">
+            <input type="hidden" name="chat_id" id="chat_id" />
+            <!-- Step 1 -->
+            <div class="form-step active">
+                <label>
+                    نام کسب‌وکار:
+                    <input type="text" name="business_name" required>
+                </label>
+                <label>
+                    حوزه فعالیت:
+                    <input type="text" name="business_field" required>
+                </label>
+                <label>
+                    آیدی اینستاگرام:
+                    <input type="text" name="instagram_id" required>
+                </label>
+                <div class="step-buttons">
+                    <span></span>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+            <div class="form-step">
+                <label>
+                    امکانات موجود برای فیلمبرداری :
+                    <input type="text" placeholder="دوربین پردازی ، نورپردازی ، استودیو ،صدابرداری و ..." name="equipments" required>
+                </label>
+                <label>
+                    موضوع مدنظر برای سناریو نویسی :
+                    <input type="text" name="senario_idea" required>
+                </label>
+                <label>
+                    آیدی تلگرام:
+                    <input type="text" name="telegram_id" required>
+                </label>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+            <!-- Step 2 -->
+            <div class="form-step">
+                <label>
+                     کلمات کلیدی یا اسکریپت مدنظر:
+                    <input type="text" name="keywords" required>
+                </label>
+                <label>
+                    نوع لحن:
+                    <input type="text" name="type_speech" id="typeSpeechInput" readonly placeholder="انتخاب نوع لحن" required style="cursor:pointer; background:#f5f7fa;" onclick="openTypeModal('speech')" />
+                </label>
+
+                <!-- Modal for speech type selection -->
+                <div id="typeModalSpeech" class="type-modal">
+                    <div class="type-modal-content">
+                        <h3>انتخاب نوع لحن</h3>
+                        <button type="button" class="type-option" onclick="selectType('رسمی')">رسمی</button>
+                        <button type="button" class="type-option" onclick="selectType('دوستانه')">دوستانه</button>
+                        <button type="button" class="type-option" onclick="selectType('طنز')">طنز</button>
+                        <button type="button" class="type-cancel" onclick="closeTypeModal('speech')">انصراف</button>
+                    </div>
+                </div>
+
+                <label>
+                    نوع محتوا:
+                    <input type="text" name="type" id="typeInput" readonly placeholder="انتخاب نوع محتوا" required style="cursor:pointer; background:#f5f7fa;" onclick="openTypeModal('content')" />
+                </label>
+
+                <!-- Modal for type selection -->
+                <div id="typeModalContent" class="type-modal">
+                    <div class="type-modal-content">
+                        <h3>انتخاب نوع محتوا</h3>
+                        <button type="button" class="type-option" onclick="selectType('ریلز')">ریلز</button>
+                        <button type="button" class="type-option" onclick="selectType('پست')">پست</button>
+                        <button type="button" class="type-option" onclick="selectType('استوری')">استوری</button>
+                        <button type="button" class="type-cancel" onclick="closeTypeModal('content')">انصراف</button>
+                    </div>
+                </div>
+                <label>
+                    سبک محتوا:
+                    <input type="text" placeholder="معرفی، آموزشی، مقایسه‌ای و ..." name="content_style" required>
+                </label>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+            <!-- Step 3 -->
+            <div class="form-step">
+                <label>
+                    موارد ممنوعه:
+                    <input type="text" placeholder="چه چیزی نباید در محتوا باشد؟" name="dont_use" required>
+                </label>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+            <!-- Step 4 -->
+            <div class="form-step">
+                <label>
+                    توضیح کوتاه درباره محصول:
+                    <input type="text" name="product_brief" required>
+                </label>
+                <label>
+                    چرا شما را انتخاب کنند؟
+                    <input type="text" placeholder="تخصص شما" name="why_choose" required>
+                </label>
+                <label style="display:block; margin-bottom: 12px;">
+                    تصویر محصول:
+                </label>
+                <div 
+                    id="imageDropBox" 
+                    tabindex="0"
+                    style="
+                        border: 2px dashed #bbb;
+                        border-radius: 12px;
+                        min-height: 180px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: #fafafa;
+                        cursor: pointer;
+                        transition: border-color 0.2s;
+                        position: relative;
+                        margin-bottom: 16px;
+                        outline: none;
+                        direction: rtl;
+                        font-family: 'Vazirmatn', Arial, sans-serif;
+                    "
+                    onclick="document.getElementById('productImageInput').click()"
+                    ondragover="event.preventDefault(); this.style.borderColor='#007bff';"
+                    ondragleave="this.style.borderColor='#bbb';"
+                    ondrop="handleImageDrop(event)"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('productImageInput').click(); event.preventDefault();}"
+                >
+                    <div id="imagePreview" style="text-align:center;">
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 8px auto;" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="#bbb" stroke-width="2" fill="none"/>
+                            <path d="M3 17L8.5 11.5C9.32843 10.6716 10.6716 10.6716 11.5 11.5L21 21" stroke="#bbb" stroke-width="2" fill="none"/>
+                            <circle cx="8.5" cy="9" r="1.5" fill="#bbb"/>
+                        </svg>
+                        <span style="color:#888;font-size:1rem;">عکس را اینجا رها کنید یا کلیک کنید</span>
+                    </div>
+                    <input 
+                        type="file" 
+                        id="productImageInput" 
+                        name="product_image" 
+                        accept="image/*" 
+                        required 
+                        style="display:none"
+                        onchange="handleImageSelect(event)"
+                    >
+                </div>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+            <!-- Step 5 -->
+            <div class="form-step">
+                <form id="multiChoiceForm">
+                    <fieldset style="border:none; padding:0;">
+                        <legend style="font-weight:bold; margin-bottom:8px;">اهداف خود را انتخاب کنید:</legend>
+                        <label class="type-option" style="display:block; margin-bottom:6px;">
+                            <input type="checkbox" name="target" value="direct-sell" style="margin-left:8px;">
+                            فروش مستقیم
+                        </label>
+                        <label class="type-option" style="display:block; margin-bottom:6px;">
+                            <input type="checkbox" name="target" value="follower" style="margin-left:8px;">
+                            افزایش دنبال‌کننده
+                        </label>
+                        <label class="type-option" style="display:block; margin-bottom:6px;">
+                            <input type="checkbox" name="target" value="brand-introduction" style="margin-left:8px;">
+                            معرفی برند
+                        </label>
+                        <label class="type-option" style="display:block; margin-bottom:6px;">
+                            <input type="checkbox" name="target" value="online-course" style="margin-left:8px;">
+                            فروش دوره آنلاین
+                        </label>
+                        <label class="type-option" style="display:block; margin-bottom:6px;">
+                            <input type="checkbox" name="target" value="trendy-viral" style="margin-left:8px;">
+                            وایرال و ترندی شدن
+                        </label>
+                        <label class="type-option" style="display:block; margin-bottom:12px;">
+                            <input type="checkbox" name="target" value="social-proof" style="margin-left:8px;">
+                            جلب اعتماد اجتماعی
+                        </label>
+                    </fieldset>
+                </form>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="submit">ارسال</button>
+                </div>
+            </div>
+            <script>
+                // For Speech Type Modal
+                function openTypeModal(modalType) {
+                    if (modalType === 'speech') {
+                        document.getElementById('typeModalSpeech').classList.add('active');
+                    } else if (modalType === 'content') {
+                        document.getElementById('typeModalContent').classList.add('active');
+                    }
+                }
+                function closeTypeModal(modalType) {
+                    if (modalType === 'speech') {
+                        document.getElementById('typeModalSpeech').classList.remove('active');
+                    } else if (modalType === 'content') {
+                        document.getElementById('typeModalContent').classList.remove('active');
+                    }
+                }
+                function selectType(type) {
+                    // This function is used for both modals, so we need to know which input to update
+                    // If the modal is for speech, update typeSpeechInput, else typeInput
+                    // We'll check which modal is currently open
+                    const speechModal = document.getElementById('typeModalSpeech');
+                    const contentModal = document.getElementById('typeModalContent');
+                    if (speechModal.classList.contains('active')) {
+                        document.getElementById('typeSpeechInput').value = type;
+                        document.getElementById('typeSpeechInput').setCustomValidity('');
+                        closeTypeModal('speech');
+                    } else if (contentModal.classList.contains('active')) {
+                        document.getElementById('typeInput').value = type;
+                        document.getElementById('typeInput').setCustomValidity('');
+                        closeTypeModal('content');
+                    }
+                }
+                // Prevent form submission if type is not selected
+                document.getElementById('multiStepForm').addEventListener('submit', function(e) {
+                    var typeInput = document.getElementById('typeInput');
+                    var typeSpeechInput = document.getElementById('typeSpeechInput');
+                    if (!typeInput.value) {
+                        typeInput.setCustomValidity('لطفاً نوع محتوا را انتخاب کنید');
+                        typeInput.reportValidity();
+                        e.preventDefault();
+                    }
+                    if (!typeSpeechInput.value) {
+                        typeSpeechInput.setCustomValidity('لطفاً نوع لحن را انتخاب کنید');
+                        typeSpeechInput.reportValidity();
+                        e.preventDefault();
+                    }
+                });
+            </script>
+            <script>
+                function handleImageDrop(e) {
+                    e.preventDefault();
+                    document.getElementById('imageDropBox').style.borderColor = '#bbb';
+                    const files = e.dataTransfer.files;
+                    if (files && files[0]) {
+                        document.getElementById('productImageInput').files = files;
+                        showImagePreview(files[0]);
+                    }
+                }
+                function handleImageSelect(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        showImagePreview(file);
+                    }
+                }
+                function showImagePreview(file) {
+                    const preview = document.getElementById('imagePreview');
+                    if (!file.type.startsWith('image/')) {
+                        preview.innerHTML = '<span style="color:#d00;">لطفاً یک فایل تصویر معتبر انتخاب کنید.</span>';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        preview.innerHTML = `
+                            <img src="${ev.target.result}" alt="پیش‌نمایش" style="max-width:100%;max-height:120px;display:block;margin:0 auto 8px auto;border-radius:8px;box-shadow:0 1px 4px #0001;">
+                            <span style="color:#888;font-size:1rem;">تغییر تصویر</span>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            </script>
+        </form>
+    </div>
+    <script>
+        let currentStep = 0;
+        const steps = document.querySelectorAll('.form-step');
+        const form = document.getElementById('multiStepForm');
+        const stepsIndicator = document.getElementById('stepsIndicator');
+
+        function renderStepsIndicator() {
+            stepsIndicator.innerHTML = '';
+
+            // Create a flex container for the lines
+            const linesRow = document.createElement('div');
+            linesRow.style.display = 'flex';
+            linesRow.style.justifyContent = 'center';
+            linesRow.style.alignItems = 'center';
+            linesRow.style.gap = '5px';
+            linesRow.style.width = '100%';
+
+            // Responsive: prevent wrapping, lines resize with container
+            linesRow.style.flexWrap = 'nowrap';
+
+            for (let i = 0; i < steps.length; i++) {
+                const line = document.createElement('div');
+                line.style.flex = '1 1 0';
+                line.style.height = '6px';
+                line.style.minWidth = '20px';
+                line.style.maxWidth = '100px';
+                line.style.borderRadius = '3px';
+                line.style.background = '#0a2342';
+                line.style.transition = 'opacity 0.2s';
+
+                // High opacity for current and all previous steps, low for future
+                if (i <= currentStep) {
+                    line.style.opacity = '1';
+                } else {
+                    line.style.opacity = '0.3';
+                }
+
+                linesRow.appendChild(line);
+            }
+
+            stepsIndicator.appendChild(linesRow);
+        }
+
+        function showStep(step) {
+            steps.forEach((div, idx) => {
+                div.classList.toggle('active', idx === step);
+            });
+            renderStepsIndicator();
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                //webhook URL of workflow
+                const res = await fetch("https://mohammammad.app.n8n.cloud/webhook-test/715c9696-68ee-4a3b-b4da-957c16291fe2" , {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+                alert(result.message || "ارسال با موفقیت انجام شد.");
+                form.reset();
+            } catch (err) {
+                alert("ارسال فرم با خطا مواجه شد.");
+            } 
+        });
+
+
+        // Initial render
+        renderStepsIndicator();
+    </script>
+    <script>
+        // Extract chat_id from ?token=...
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        if (token) {
+            try {
+                const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
+                const decoded = atob(base64);
+                const [chatId] = decoded.split("|");
+                document.getElementById("chat_id").value = chatId;
+            } catch (err) {
+                alert("لینک معتبر نیست.");
+            }
+        } else {
+            alert("توکن یافت نشد.");
+        }
+    </script>
+    
+</body>
+</html> 
