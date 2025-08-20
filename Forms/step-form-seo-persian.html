@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فرم مرحله به مرحله</title>
+    <!-- Vazirmatn font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a2342;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        .form-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            margin-left: 10%;
+            margin-right: 10%;
+            padding: 32px 28px 24px 28px;
+            min-width: 340px;
+            max-width: 90vw;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        .steps-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
+            gap: 12px;
+        }
+        .step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e0e7ef;
+            color: #0a2342;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .step-circle.active {
+            background: #0a2342;
+            color: #fff;
+        }
+        .form-step {
+            display: none;
+            width: 100%;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .step-buttons {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: row-reverse;
+        }
+        input[type="text"], input[type="email"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #bfc9d9;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        button {
+            background: #0a2342;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 22px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        button:hover {
+            background: #163d6b;
+        }
+        h2 {
+            color: #0a2342;
+            margin-bottom: 18px;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+    </style>
+    <style>
+        .type-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(30, 41, 59, 0.35);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            direction: rtl;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        .type-modal.active {
+            display: flex;
+        }
+        .type-modal-content {
+            background: #fff;
+            border-radius: 18px;
+            padding: 40px 32px 28px 32px;
+            box-shadow: 0 8px 32px rgba(10,35,66,0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 320px;
+            max-width: 90vw;
+            animation: popIn 0.22s cubic-bezier(.4,1.4,.6,1) both;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            direction: rtl;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .type-modal-content h3 {
+            margin-bottom: 28px;
+            color: #0a2342;
+            font-size: 1.35rem;
+            font-weight: 600;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        .type-option {
+            width: 220px;
+            margin: 0 0 18px 0;
+            padding: 18px 0;
+            font-size: 1.15rem;
+            border: none;
+            border-radius: 10px;
+            background: #e6ecfa;
+            color: #0a2342;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+        .type-option:hover {
+            background: #0a2342;
+            color: #fff;
+        }
+        .type-cancel {
+            margin-top: 8px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: 'Vazirmatn', Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="steps-indicator" id="stepsIndicator">
+            <!-- Steps will be rendered here -->
+        </div>
+        <h2>فرم مرحله به مرحله</h2>
+        <form id="multiStepForm">
+            <input type="hidden" name="chat_id" id="chat_id" />
+            <!-- بخش ۱: اطلاعات کلی -->
+            <div class="form-step active">
+                <label>
+                    نام برند/وبسایت:
+                    <input type="text" name="brand_or_website" placeholder="مثال: دیجیکالا / example.com" required>
+                </label>
+                <label>
+                    حوزه فعالیت:
+                    <input type="text" name="business_niche" placeholder="مثال: فروشگاه آنلاین، خدمات دیجیتال مارکتینگ، آموزش" required>
+                </label>
+                <label>
+                    توضیح کوتاه درباره محصولات یا خدمات:
+                    <input type="text" name="products_services_brief" placeholder="در ۱-۲ جمله معرفی کنید" required>
+                </label>
+                <div class="step-buttons">
+                    <span></span>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+
+            <!-- بخش ۲: موضوع مقاله -->
+            <div class="form-step">
+                <label>
+                    عنوان پیشنهادی یا موضوع کلی:
+                    <input type="text" name="article_title" placeholder="عنوان یا ایده کلی مقاله" required>
+                </label>
+                <label>
+                    کلیدواژه‌های اصلی:
+                    <input type="text" name="primary_keywords" placeholder="مثال: خرید کفش، فروشگاه کفش مردانه" required>
+                </label>
+                <label>
+                    کلیدواژه‌های فرعی یا LSI:
+                    <input type="text" name="secondary_keywords" placeholder="مثال: کفش چرمی، کفش پیاده‌روی" required>
+                </label>
+                <label>
+                    هدف مقاله:
+                    <input type="text" name="article_goal" placeholder="آموزشی، فروش، خبری، معرفی محصول" required>
+                </label>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+
+            <!-- بخش ۳: هدف سئو -->
+            <div class="form-step">
+                <label>
+                    بازار هدف:
+                    <input type="text" name="target_market" placeholder="ایران یا بین‌المللی؟" required>
+                </label>
+                <label>
+                    زبان مقاله:
+                    <input type="text" name="article_language" placeholder="فارسی یا انگلیسی؟" required>
+                </label>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+
+            <!-- بخش ۴: منابع و رفرنس‌ها -->
+            <div class="form-step">
+                <label>
+                    آیا لینک یا مقالات مرجع دارید؟
+                    <input type="text" name="reference_links" placeholder="در صورت وجود، لینک‌ها را وارد کنید یا بنویسید: ندارم" required>
+                </label>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="button" onclick="nextStep()">بعدی</button>
+                </div>
+            </div>
+
+            <!-- بخش ۵: ساختار محتوا -->
+            
+
+            <!-- بخش ۶: CTA و هدف نهایی -->
+            <div class="form-step">
+                <label>
+                    می‌خواهید کاربر بعد از خواندن چه کاری انجام دهد؟
+                    <input type="text" name="post_read_action" placeholder="مثال: خرید، عضویت، تماس، دانلود" required>
+                </label>
+                <label style="display:block; margin-bottom:1rem; font-family:'Vazirmatn', sans-serif;">
+                    آیا لینک به محصولات/صفحات دیگر اضافه شود؟
+                    <button 
+                        type="button" 
+                        onclick="openInternalLinksChoiceModal()" 
+                        style="
+                            font-family:'Vazirmatn',sans-serif;
+                            padding:0.7rem 1.7rem 0.7rem 1.7rem;
+                            border-radius:18px;
+                            border:1.5px solid #e0e0e5;
+                            background:#f7f7fa;
+                            font-size:1.08rem;
+                            color:#222;
+                            box-shadow:0 1px 4px #0001;
+                            cursor:pointer;
+                            transition:border 0.2s;
+                            margin-top:0.5rem;
+                        "
+                        id="internalLinksChoiceBtn"
+                    >انتخاب کنید</button>
+                </label>
+                <input type="hidden" name="add_internal_links" id="add_internal_links" value="خیر">
+                <!-- Modal for Yes/No choice -->
+                <div id="internalLinksChoiceModal" class="custom-modal-blur" style="display:none;">
+                    <div class="custom-modal-blur-bg" onclick="closeInternalLinksChoiceModal()"></div>
+                    <div class="custom-modal-content" style="font-family:'Vazirmatn', sans-serif; text-align:center; padding:24px 20px; min-width:370px; max-width:98vw;">
+                        <button type="button" class="custom-modal-close" onclick="closeInternalLinksChoiceModal()" aria-label="بستن">&times;</button>
+                        <br>
+                        <h4 style="margin-top:0; margin-bottom:1.5rem; font-weight:600; font-size:1.15rem; color:#222;">آیا لینک به محصولات/صفحات دیگر اضافه شود؟</h4>
+                        <div style="display:flex; gap:1.2rem; justify-content:center; margin-bottom:1.2rem;">
+                            <button 
+                                type="button" 
+                                onclick="selectInternalLinksChoice('no')" 
+                                style="
+                                    font-family:'Vazirmatn',sans-serif;
+                                    background:linear-gradient(90deg,#f5f5f7 0%,#e9e9ee 100%);
+                                    color:#d32f2f;
+                                    border:none;
+                                    padding:0.7rem 2.2rem;
+                                    border-radius:14px;
+                                    font-size:1.08rem;
+                                    font-weight:600;
+                                    box-shadow:0 8px 32px #0002;
+                                    cursor:pointer;
+                                    transition:background 0.2s;
+                                "
+                                onmouseover="this.style.background='#e9e9ee';"
+                                onmouseout="this.style.background='linear-gradient(90deg,#f5f5f7 0%,#e9e9ee 100%)';"
+                            >خیر</button>
+                            <button 
+                                type="button" 
+                                onclick="selectInternalLinksChoice('yes')" 
+                                style="
+                                    font-family:'Vazirmatn',sans-serif;
+                                    background:linear-gradient(90deg,#e3f2fd 0%,#bbdefb 100%);
+                                    color:#1976d2;
+                                    border:none;
+                                    padding:0.7rem 2.2rem;
+                                    border-radius:14px;
+                                    font-size:1.08rem;
+                                    font-weight:600;
+                                    box-shadow:0 8px 32px #0002;
+                                    cursor:pointer;
+                                    transition:background 0.2s;
+                                "
+                                onmouseover="this.style.background='#bbdefb';"
+                                onmouseout="this.style.background='linear-gradient(90deg,#e3f2fd 0%,#bbdefb 100%)';"
+                            >بله</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal for entering links -->
+                <div id="internalLinksModal" class="custom-modal-blur" style="display:none;">
+                    <div class="custom-modal-blur-bg" onclick="closeInternalLinksModal()"></div>
+                    <div class="custom-modal-content" style="font-family:'Vazirmatn', sans-serif; padding:24px 20px; min-width:370px; max-width:98vw;">
+                        <button type="button" class="custom-modal-close" onclick="closeInternalLinksModal()" aria-label="بستن">&times;</button>
+                        <br>
+                        <h4 style="margin-top:0; margin-bottom:1rem; font-weight:600; font-size:1.15rem; color:#222;">لینک‌های پیشنهادی را وارد کنید</h4>
+                        <div style="padding: 0 2px;">
+                            <textarea 
+                                id="internalLinksInput" 
+                                style="
+                                    width:100%; 
+                                    min-height:90px; 
+                                    margin-bottom:1.2rem; 
+                                    border-radius: 14px; 
+                                    border:1.5px solid #e0e0e5; 
+                                    padding:0.7rem 1rem; 
+                                    font-family:'Vazirmatn', sans-serif;
+                                    font-size:1rem;
+                                    background:#f7f7fa;
+                                    box-shadow:0 1px 4px #0001;
+                                    resize:vertical;
+                                    box-sizing: border-box;
+                                " 
+                                placeholder="هر لینک را در یک خط وارد کنید"></textarea>
+                        </div>
+                        <button 
+                            type="button" 
+                            onclick="submitInternalLinks()" 
+                            style="
+                                width:100%; 
+                                background:linear-gradient(90deg,#f5f5f7 0%,#e9e9ee 100%);
+                                color:#1976d2; 
+                                border:none; 
+                                padding:0.7rem 0; 
+                                border-radius: 12px; 
+                                font-size:1.08rem; 
+                                font-family:'Vazirmatn', sans-serif;
+                                font-weight:600;
+                                box-shadow:0 1px 4px #0001;
+                                transition:background 0.2s;
+                                cursor:pointer;
+                            "
+                            onmouseover="this.style.background='#e9e9ee';"
+                            onmouseout="this.style.background='linear-gradient(90deg,#f5f5f7 0%,#e9e9ee 100%)';"
+                        >ثبت لینک‌ها</button>
+                    </div>
+                </div>
+                <style>
+                    @import url('https://cdn.fontcdn.ir/Font/Persian/Vazirmatn/Vazirmatn.css');
+                    .custom-modal-blur {
+                        position: fixed;
+                        z-index: 10000;
+                        top: 0; left: 0; right: 0; bottom: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .custom-modal-blur-bg {
+                        position: absolute;
+                        top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(255,255,255,0.6);
+                        backdrop-filter: blur(6px);
+                        z-index: 0;
+                    }
+                    .custom-modal-content {
+                        position: relative;
+                        z-index: 1;
+                        background: #fff;
+                        border-radius: 22px;
+                        box-shadow: 0 12px 48px #0002, 0 1.5px 8px #0001;
+                        padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+                        min-width: 320px;
+                        max-width: 95vw;
+                        margin: 0 1rem;
+                        font-family: 'Vazirmatn', sans-serif;
+                        animation: modalPopIn 0.22s cubic-bezier(.4,1.6,.6,1) both;
+                    }
+                    @keyframes modalPopIn {
+                        0% { transform: scale(0.92) translateY(40px); opacity: 0; }
+                        100% { transform: scale(1) translateY(0); opacity: 1; }
+                    }
+                    .custom-modal-close {
+                        position: absolute;
+                        top: 0.7rem;
+                        left: 0.7rem;
+                        background: none;
+                        border: none;
+                        font-size: 2.1rem;
+                        color: #888;
+                        cursor: pointer;
+                        z-index: 2;
+                        line-height: 1;
+                        padding: 0;
+                    }
+                    @media (max-width: 500px) {
+                        .custom-modal-content { min-width: 0; padding: 1.2rem 0.5rem 1.2rem 0.5rem; }
+                        .custom-modal-close { font-size: 1.6rem; left: 0.4rem; top: 0.4rem; }
+                    }
+                </style>
+                <script>
+                    function openInternalLinksChoiceModal() {
+                        document.getElementById('internalLinksChoiceModal').style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+                    }
+                    function closeInternalLinksChoiceModal() {
+                        document.getElementById('internalLinksChoiceModal').style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
+                    function selectInternalLinksChoice(choice) {
+                        if (choice === 'no') {
+                            document.getElementById('add_internal_links').value = 'خیر';
+                            document.getElementById('internalLinksChoiceBtn').innerText = 'خیر';
+                            closeInternalLinksChoiceModal();
+                        } else {
+                            closeInternalLinksChoiceModal();
+                            setTimeout(function() {
+                                openInternalLinksModal();
+                            }, 200);
+                        }
+                    }
+                    function openInternalLinksModal() {
+                        document.getElementById('internalLinksModal').style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+                        document.getElementById('internalLinksInput').focus();
+                    }
+                    function closeInternalLinksModal() {
+                        document.getElementById('internalLinksModal').style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
+                    function submitInternalLinks() {
+                        var links = document.getElementById('internalLinksInput').value.trim();
+                        if (links.length === 0) {
+                            alert('لطفاً حداقل یک لینک وارد کنید یا روی "خیر" کلیک کنید.');
+                            return;
+                        }
+                        document.getElementById('add_internal_links').value = links;
+                        document.getElementById('internalLinksChoiceBtn').innerText = 'بله';
+                        closeInternalLinksModal();
+                    }
+                </script>
+                <div class="step-buttons">
+                    <button type="button" onclick="prevStep()">قبلی</button>
+                    <button type="submit">ارسال</button>
+                </div>
+            </div>
+            <script>
+                function handleImageDrop(e) {
+                    e.preventDefault();
+                    document.getElementById('imageDropBox').style.borderColor = '#bbb';
+                    const files = e.dataTransfer.files;
+                    if (files && files[0]) {
+                        document.getElementById('productImageInput').files = files;
+                        showImagePreview(files[0]);
+                    }
+                }
+                function handleImageSelect(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        showImagePreview(file);
+                    }
+                }
+                function showImagePreview(file) {
+                    const preview = document.getElementById('imagePreview');
+                    if (!file.type.startsWith('image/')) {
+                        preview.innerHTML = '<span style="color:#d00;">لطفاً یک فایل تصویر معتبر انتخاب کنید.</span>';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        preview.innerHTML = `
+                            <img src="${ev.target.result}" alt="پیش‌نمایش" style="max-width:100%;max-height:120px;display:block;margin:0 auto 8px auto;border-radius:8px;box-shadow:0 1px 4px #0001;">
+                            <span style="color:#888;font-size:1rem;">تغییر تصویر</span>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            </script>
+        </form>
+    </div>
+    <script>
+        let currentStep = 0;
+        const steps = document.querySelectorAll('.form-step');
+        const form = document.getElementById('multiStepForm');
+        const stepsIndicator = document.getElementById('stepsIndicator');
+
+        function renderStepsIndicator() {
+            stepsIndicator.innerHTML = '';
+
+            // Create a flex container for the lines
+            const linesRow = document.createElement('div');
+            linesRow.style.display = 'flex';
+            linesRow.style.justifyContent = 'center';
+            linesRow.style.alignItems = 'center';
+            linesRow.style.gap = '5px';
+            linesRow.style.width = '100%';
+
+            // Responsive: prevent wrapping, lines resize with container
+            linesRow.style.flexWrap = 'nowrap';
+
+            for (let i = 0; i < steps.length; i++) {
+                const line = document.createElement('div');
+                line.style.flex = '1 1 0';
+                line.style.height = '6px';
+                line.style.minWidth = '20px';
+                line.style.maxWidth = '100px';
+                line.style.borderRadius = '3px';
+                line.style.background = '#0a2342';
+                line.style.transition = 'opacity 0.2s';
+
+                // High opacity for current and all previous steps, low for future
+                if (i <= currentStep) {
+                    line.style.opacity = '1';
+                } else {
+                    line.style.opacity = '0.3';
+                }
+
+                linesRow.appendChild(line);
+            }
+
+            stepsIndicator.appendChild(linesRow);
+        }
+
+        function showStep(step) {
+            steps.forEach((div, idx) => {
+                div.classList.toggle('active', idx === step);
+            });
+            renderStepsIndicator();
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                //webhook URL of workflow
+                const res = await fetch("https://mohammammad.app.n8n.cloud/webhook-test/715c9696-68ee-4a3b-b4da-957c16291fe2" , {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+                alert(result.message || "ارسال با موفقیت انجام شد.");
+                form.reset();
+            } catch (err) {
+                alert("ارسال فرم با خطا مواجه شد.");
+            } 
+        });
+
+
+        // Initial render
+        renderStepsIndicator();
+    </script>
+    <script>
+        // Extract chat_id from ?token=...
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        if (token) {
+            try {
+                const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
+                const decoded = atob(base64);
+                const [chatId] = decoded.split("|");
+                document.getElementById("chat_id").value = chatId;
+            } catch (err) {
+                alert("لینک معتبر نیست.");
+            }
+        } else {
+            alert("توکن یافت نشد.");
+        }
+    </script>
+    
+</body>
+</html> 
